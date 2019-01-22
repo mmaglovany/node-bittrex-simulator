@@ -1,0 +1,267 @@
+<head>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css">
+  <title>Orders: {{{getUserName info}}}</title>
+</head>
+
+<body class="container">
+<h1>User Orders -
+  <small>{{{getUserName info}}}</small>
+  <div class="float-right"><a href="/">global</a></div>
+</h1>
+<hr/>
+
+<h5 class="mt-5">Balances</h5>
+<table class="table small">
+  <thead>
+  <tr class="text-center">
+    <th>Currency</th>
+    <th>Balance</th>
+    <th>Available</th>
+    <th>Pending</th>
+  </tr>
+  </thead>
+  <tbody>
+  {{#each balances}}
+    <tr class="text-center">
+      <th>{{Currency}}</th>
+      <td>
+        <form action="/balance/update/{{../info}}" method="POST" style="margin: 0; padding: 0">
+          <input type="hidden" name="Currency" value="{{Currency}}">
+          <input type="text" value="{{Balance}}" name="Amount">
+          <button type="submit">Update</button>
+        </form>
+      </td>
+      <td>{{Available}}</td>
+      <td>{{Pending}}</td>
+    </tr>
+  {{/each}}
+  </tbody>
+</table>
+
+<h5 class="mt-5">Open orders</h5>
+<table class="table small">
+  <thead>
+  <tr class="text-center">
+    <th>Order Uuid</th>
+    <th>Market Name</th>
+    <th>Order Type</th>
+    <th>Quantity</th>
+    <th>Limit</th>
+    <th>Open at</th>
+    <th>Actions</th>
+  </tr>
+  </thead>
+  <tbody>
+  {{#each openOrders}}
+    <tr class="text-center">
+      <td>{{OrderUuid}}</td>
+      <td>{{Exchange}}</td>
+      <td>{{OrderType}}</td>
+      <td>{{Quantity}}</td>
+      <td>{{Limit}}</td>
+      <td>{{dateFormat Opened}}</td>
+      <td>
+        <a href="/order/cancel?uuid={{OrderUuid}}&info={{../info}}">Cancel</a>
+        <a href="/order/close?uuid={{OrderUuid}}&info={{../info}}">Close</a>
+        <a target="_blank" href="/api/v1.1/account/getorder?uuid={{OrderUuid}}&info={{../info}}">Raw</a>
+      </td>
+    </tr>
+  {{/each}}
+  </tbody>
+</table>
+
+<h5 class="mt-5">Push order</h5>
+<div class="form-group">
+  <label>MarketName</label>
+  <select class="form-control" name="market" id="market">
+    {{#each availableMarkets}}
+      <option value="{{MarketName}}">{{MarketName}}</option>
+    {{/each}}
+  </select>
+</div>
+<div class="container">
+  <div class="row">
+    <div class="col">
+      <form method="post" id="form-buy" class="hidden form">
+        <input type="hidden" name="MarketName">
+        <input type="hidden" name="Type" value="LIMIT_BUY">
+        <div class="form-group">
+          <label>
+            Units (Available:<span id="availableBuyBalance"></span>)
+            or Piece of balance
+            <select class="" name="percent-of-balance">
+              <option></option>
+              <option value="10">10 %</option>
+              <option value="30">30 %</option>
+              <option value="50">50 %</option>
+              <option value="70">70 %</option>
+              <option value="100">100 %</option>
+            </select>
+          </label>
+          <input class="form-control" type="text" name="quantity">
+        </div>
+        <div class="form-group">
+          <label>Bid</label>
+          <input class="form-control" type="text" name="rate">
+        </div>
+        <div class="form-group">
+          <label>Total</label>
+          <input class="form-control" type="text" name="total">
+        </div>
+        <button class="btn" type="submit"></button>
+      </form>
+    </div>
+    <div class="col">
+      <form method="post" id="form-sell" class="hidden">
+        <input type="hidden" name="MarketName">
+        <input type="hidden" name="Type" value="LIMIT_SELL">
+        <div class="form-group">
+          <label>
+            Units (Available:<span id="availableSellBalance"></span>)
+            or Piece of balance
+            <select name="percent-of-balance">
+              <option></option>
+              <option value="10">10 %</option>
+              <option value="30">30 %</option>
+              <option value="50">50 %</option>
+              <option value="70">70 %</option>
+              <option value="100">100 %</option>
+            </select>
+          </label>
+          <input class="form-control" type="text" name="quantity">
+        </div>
+        <div class="form-group">
+          <label>Ask</label>
+          <input class="form-control" type="text" name="rate">
+        </div>
+        <div class="form-group">
+          <label>Total</label>
+          <input class="form-control" type="text" name="total">
+        </div>
+        <button class="btn" type="submit"></button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<h5 class="mt-5">Orders history</h5>
+<table class="table small">
+  <thead>
+  <tr class="text-center">
+    <th>Order Uuid</th>
+    <th>Market Name</th>
+    <th>Order Type</th>
+    <th>Quantity</th>
+    <th>Limit</th>
+    <th>Open at</th>
+    <th>State</th>
+  </tr>
+  </thead>
+  <tbody>
+  {{#each historyOrders}}
+    <tr class="text-center">
+      <td>{{OrderUuid}}</td>
+      <td>{{Exchange}}</td>
+      <td>{{OrderType}}</td>
+      <td>{{Quantity}}</td>
+      <td>{{Limit}}</td>
+      <td>{{dateFormat Opened}}</td>
+      <td>{{_type}}</td>
+    </tr>
+  {{/each}}
+  </tbody>
+</table>
+
+<script>
+  var markets = {{{json availableMarkets}}};
+  var balances = {{{json balances}}};
+
+  var buyForm = document.querySelector('#form-buy');
+  var sellForm = document.querySelector('#form-sell');
+
+  var currentMarket = {
+    availableBuyBalance: null,
+    availableSellBalance: null,
+  };
+
+  function changeMarket() {
+    buyForm.classList.remove('hidden');
+    sellForm.classList.remove('hidden');
+
+    var selectedMarket = this.value;
+
+    var marketData = markets.find((market) => market.MarketName === selectedMarket);
+    var [fromCoin, toCoin] = marketData.MarketName.split('-');
+
+    buyForm.querySelector('[name=MarketName]').value = marketData.MarketName;
+    sellForm.querySelector('[name=MarketName]').value = marketData.MarketName;
+
+    var availableBuyBalance = balances.find((balance) => balance.Currency === fromCoin);
+    var availableSellBalance = balances.find((balance) => balance.Currency === toCoin);
+
+    currentMarket.availableBuyBalance = availableBuyBalance;
+    currentMarket.availableSellBalance = availableSellBalance;
+
+    if (availableBuyBalance) {
+      buyForm.querySelector('button').innerText = 'Buy ' + toCoin;
+      buyForm.querySelector('[name=rate]').value = marketData.Last;
+      buyForm.querySelector('#availableBuyBalance').innerHTML = [availableBuyBalance.Available, fromCoin].join(' ');
+    } else {
+      buyForm.classList.add('hidden');
+    }
+
+    if (availableSellBalance) {
+      sellForm.querySelector('button').innerText = 'Sell ' + toCoin;
+      sellForm.querySelector('[name=rate]').value = marketData.Last;
+      sellForm.querySelector('#availableSellBalance').innerHTML = [availableSellBalance.Available, toCoin].join(' ');
+    } else {
+      sellForm.classList.add('hidden');
+    }
+
+    buyForm.querySelector('[name=percent-of-balance]').addEventListener('change', function () {
+      var rateValue = marketData.Last;
+      var totalValue = currentMarket.availableBuyBalance.Available / 100 * this.value;
+      var quantityValue = totalValue / rateValue;
+      buyForm.querySelector('[name=total]').value = totalValue;
+      buyForm.querySelector('[name=quantity').value = quantityValue;
+    });
+
+    buyForm.querySelector('[name=total]').addEventListener('keyup', function () {
+      var rateValue = marketData.Last;
+      var totalValue = this.value;
+      buyForm.querySelector('[name=quantity').value = totalValue / rateValue;
+    });
+
+    buyForm.querySelector('[name=quantity]').addEventListener('keyup', function () {
+      var rateValue = marketData.Last;
+      var quantityValue = this.value;
+      buyForm.querySelector('[name=total]').value = rateValue * quantityValue;
+    });
+
+    sellForm.querySelector('[name=percent-of-balance]').addEventListener('change', function () {
+      var rateValue = marketData.Last;
+      var totalValue = currentMarket.availableBuyBalance.Available * this.value;
+      sellForm.querySelector('[name=quantity]').value = currentMarket.availableSellBalance.Available / 100 * this.value;
+      sellForm.querySelector('[name=total').value = rateValue * parseFloat(sellForm.querySelector('[name=quantity]').value);
+    });
+
+    sellForm.querySelector('[name=quantity').addEventListener('keyup', function () {
+      var rateValue = marketData.Last;
+      sellForm.querySelector('[name=total').value = rateValue * this.value;
+    });
+
+    sellForm.querySelector('[name=total').addEventListener('keyup', function () {
+      var rateValue = marketData.Last;
+      sellForm.querySelector('[name=quantity').value = this.value / rateValue;
+    });
+  }
+
+  document.querySelector('#market').value = '';
+  document.querySelector('#market').addEventListener('change', changeMarket);
+</script>
+
+<style>
+  .hidden {
+    display: none;
+  }
+</style>

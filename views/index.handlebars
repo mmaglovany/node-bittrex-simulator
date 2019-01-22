@@ -1,0 +1,42 @@
+<head>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css">
+</head>
+
+<body class="container">
+<h1>Bittrex Simulator. Global state.</h1>
+<hr/>
+
+<h5>Scanner state</h5>
+<table class="table small">
+  <thead>
+  <tr>
+    <th>Username</th>
+    <th class="text-center">Deposit Scanner</th>
+    <th class="text-center">Withdrawal Scanner</th>
+    <th class="text-center">Balance Scanner</th>
+    <th class="text-center">OpenOrders Scanner</th>
+    <th class="text-center">OrderHistory Scanner</th>
+  </tr>
+  </thead>
+  <tbody>
+  {{#each clients}}
+    <tr class="text-center">
+      <th class="text-left">{{{getUserName info}}}</th>
+      <td>
+        {{{lastCheck info 'deposit'}}}<br/>
+        <a href="/deposit/{{info}}" target="_blank">Deposits</a>
+      </td>
+      <td>{{{lastCheck info 'withdrawal'}}}</td>
+      <td>
+        {{{lastCheck info 'balances'}}}<br>
+      </td>
+      <td>{{{lastCheck info 'openOrders'}}}</td>
+      <td>
+        {{{lastCheck info 'orderHistory'}}}<br/>
+        <a href="/order/{{info}}" target="_blank">Orders</a>
+      </td>
+    </tr>
+  {{/each}}
+  </tbody>
+</table>
+</body>

@@ -1,0 +1,33 @@
+<head>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css">
+</head>
+
+<body class="container">
+<h1>
+  User Deposits -
+  <small>{{{getUserName info}}}</small>
+  <div class="float-right"><a href="/">global</a></div>
+</h1>
+<hr/>
+
+<h5>List</h5>
+{{{renderDeposit info}}}
+
+<h5>Push deposit</h5>
+<form class="form" action="/deposit/{{info}}" method="post">
+  <div class="form-group">
+    <label>Amount</label>
+    <input class="form-control" type="text" value="0.2" name="amount"/>
+  </div>
+  <div class="form-group">
+    <label> Currency</label>
+    <select class="form-control" name="currency">
+      <option value="BTC">BTC</option>
+      <option value="ETH">ETH</option>
+      <option value="AEON">AEON</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <button class="btn btn-inverse" type="submit">Push deposit</button>
+  </div>
+</form>
